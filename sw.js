@@ -1,3 +1,5 @@
+const CACHE_NAME = 'olpc-map-v1';
+
 const ASSETS = [
     './',
     './index.html',
