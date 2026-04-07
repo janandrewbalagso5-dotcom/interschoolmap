@@ -1,0 +1,16 @@
+{
+  "name": "Our Lady of the Pillar College Map",
+  "short_name": "OLPC Map",
+  "description": "Interactive Campus Navigation Map for OLPC San Manuel, Isabela",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#eef2ff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "styles/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}

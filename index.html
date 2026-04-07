@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OLPC Campus Navigator</title>
+  <script>if (location.protocol !== 'file:') { var lnk = document.createElement('link'); lnk.rel = 'manifest'; lnk.href = 'manifest.json'; document.head.appendChild(lnk); }</script>
+  <meta name="theme-color" content="#3b82f6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div>
+        <img src="styles/logo.png" alt="OLPC Logo" class="logo-pin" />
+      </div>
+      <div>
+        <div class="logo-name">Our lady of the Pillar College</div>
+        <div class="logo-sub">San Manuel Inc.</div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input class="search-input" type="text" id="searchInput" placeholder="Search rooms and offices"
+        autocomplete="off">
+      <div class="sdrop" id="sdrop"></div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="loc-badge" id="locBadge" onclick="recenterUser()">
+        <div class="loc-dot"></div>
+        <span id="locText">Locating...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast hide" id="toast">
+    <div class="t-pulse"></div><span id="toastMsg"></span>
+  </div>
+
+  <div class="layout">
+    <div class="map-view">
+      <div id="map"></div>
+
+      <!-- AR VIEW -->
+      <div class="ar-view" id="arView">
+        <button class="ar-exit-btn ar-exit-btn-floating" onclick="closeAR()">✕ Exit</button>
+        <div class="ar-cam-section">
+          <video id="arVideo" autoplay playsinline muted></video>
+          <div class="cam-fallback" id="camFallback">
+            <div style="font-size:48px;opacity:.3;margin-bottom:8px;">📷</div>
+            <strong style="color:var(--text);font-size:14px;">Camera Required</strong>
+            <span>Allow camera access for AR navigation.</span>
+          </div>
+          <canvas id="arCanvas"></canvas>
+          <div class="ar-dir-overlay">
+            <div class="ar-dest-chip">
+              <span class="ar-dest-chip-ico" id="arDestIcon">🎯</span>
+              <div class="ar-dest-chip-txt">
+                <div class="ar-dest-chip-name" id="arDestNamePill">Destination</div>
+                <div class="ar-dest-chip-sub" id="arDestSubPill">Building · Floor</div>
+              </div>
+            </div>
+            <div class="ar-eta-chip" id="arEtaChip">🚶 —</div>
+          </div>
+          <div class="ar-compass-wrap">
+            <div class="ar-compass-ring" id="arCompassRing">
+              <div class="ar-dir-arrow" id="arDirArrow">↑</div>
+            </div>
+            <div class="ar-dist-badge" id="arDistBadge">Calculating...</div>
+          </div>
+        </div>
+        <div class="ar-map-section">
+          <button class="ar-exit-btn" onclick="closeAR()">✕ Exit</button>
+          <div class="ar-map-handle" aria-hidden="true"></div>
+          <canvas id="arMapCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- CAMPUS MAP -->
+      <div class="campus-scroll" id="campusScroll">
+        <div class="campus" id="campus">
+          <div class="campus-title">OUR LADY OF THE PILLAR COLLEGE · SAN MANUEL, INC.</div>
+
+          <svg class="xsvg" id="xsvg"></svg>
+          <div id="bslots"></div>
+          <div class="user-loc" id="userLocMarker" style="display:none;">
+            <div class="user-loc-ring">
+              <div class="user-loc-dot"></div>
+            </div>
+          </div>
+          <div class="north"><span class="north-arrow">↑</span><span class="north-lbl">N</span></div>
+          <div class="map-ctrl">
+            <button class="mc-btn" onclick="zoomIn()">+</button>
+            <button class="mc-btn" onclick="zoomOut()">−</button>
+            <button class="mc-btn" onclick="recenterUser()" title="My Location">◎</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE DRAWER BACKDROP -->
+    <div id="drawerBackdrop" onclick="closeMobileDrawer()"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-handle-strip" onclick="toggleMobileDrawer()" aria-label="Toggle navigation panel"></div>
+      <div class="sb-top">
+        <div class="sb-hint" id="modeHint">Tap any room → set location. Tap destination → get route.</div>
+      </div>
+      <div class="sb-body">
+        <div id="sbDefaultPanel">
+          <div id="installPromo" style="display:none; margin: 10px 0; padding: 12px; border-radius: 10px; background: rgba(37,99,235,.08); border: 1px solid rgba(59,130,246,.2); align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--text);">Install App</div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 2px;">Add this map to your home screen</div>
+            </div>
+            <button onclick="installApp()" style="padding: 6px 12px; border-radius: 6px; background: var(--blue); color: white; border: none; font-size: 10px; font-weight: 700; cursor: pointer;">Install</button>
+          </div>
+          <div class="sb-empty" id="sbEmpty">
+            <div class="ico"></div>Tap any room on the map to begin, or use a quick destination.
+          </div>
+          <div class="quick-sec">
+            <div class="sb-sec" style="margin-top:12px;">Quick Destinations</div>
+            <div class="quick-grid" id="quickGrid"></div>
+          </div>
+          <div class="recent-sec" id="recentSec" style="display:none;">
+            <div class="sb-sec">Recent Routes</div>
+            <div id="recentList"></div>
+          </div>
+        </div>
+        <div class="route" id="routePanel">
+          <div class="rt-pt">
+            <div class="rt-dot" style="background:#3b82f6;box-shadow:0 0 6px rgba(59,130,246,.4);"></div>
+            <div>
+              <div class="rt-name" id="rFrom">—</div>
+              <div class="rt-sub" id="rFromSub"></div>
+            </div>
+          </div>
+          <div class="rt-vline"></div>
+          <div class="rt-pt">
+            <div class="rt-dot" style="background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.4);"></div>
+            <div>
+              <div class="rt-name" id="rTo">—</div>
+              <div class="rt-sub" id="rToSub"></div>
+            </div>
+          </div>
+          <div class="rt-eta"><span class="rt-eta-ico">🚶</span><span class="rt-eta-txt" id="rtEtaTxt">—</span></div>
+          <div class="steps" id="steps"></div>
+          <button class="ar-launch-btn" onclick="launchAR()">Launch AR Navigation</button>
+          <button class="share-route-btn" onclick="shareRoute()">📤 Share Route</button>
+          <button class="clear-btn" onclick="clearRoute()">✕ Clear Route</button>
+        </div>
+      </div>
+      <div class="sb-legend">
+        <div class="sb-sec">Legend</div>
+        <div class="leg-grid">
+          <div class="leg-row">
+            <div class="leg-dot" style="background:rgba(80,90,200,.15);border-color:rgba(100,110,230,.4);"></div>
+            Classroom
+          </div>
+          <div class="leg-row">
+            <div class="leg-dot" style="background:rgba(6,160,90,.12);border-color:rgba(6,180,120,.35);"></div>
+            Lab/Library
+          </div>
+          <div class="leg-row">
+            <div class="leg-dot" style="background:rgba(130,60,200,.12);border-color:rgba(160,100,230,.35);"></div>
+            Office
+          </div>
+          <div class="leg-row">
+            <div class="leg-dot" style="background:rgba(180,130,20,.12);border-color:rgba(220,180,40,.35);"></div>
+            Staircase
+          </div>
+          <div class="leg-row"><span style="color:#3b82f6;font-size:11px;">●</span>&nbsp;You Are Here</div>
+          <div class="leg-row"><span style="color:#22c55e;font-size:11px;">★</span>&nbsp;Destination</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE FAB -->
+  <button id="mobileFAB" onclick="toggleMobileDrawer()" style="
+  position:fixed; bottom:16px; right:16px; z-index:401;
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg,#2563eb,#06b6d4);
+  border:none; box-shadow:0 4px 20px rgba(37,99,235,.4);
+  color:#fff; font-size:22px; cursor:pointer;
+  align-items:center; justify-content:center;
+  transition:transform .2s;
+" aria-label="Open navigation panel">🗺️</button>
+
+  <!-- POPUP -->
+  <div class="popup-overlay" id="popupOverlay" onclick="closePopupBg(event)">
+    <div class="popup">
+      <div class="popup-handle"></div>
+      <div class="popup-head">
+        <div class="popup-ico" id="pIco">🚪</div>
+        <div>
+          <div class="popup-title" id="pTitle">Room</div>
+          <div class="popup-sub" id="pSub"></div>
+        </div>
+        <button class="popup-close" onclick="closePopup()">✕</button>
+      </div>
+      <div class="popup-body">
+        <div class="popup-hours" id="pHours">
+          <div class="popup-hours-dot"></div><span id="pHoursText">Open 7:00 AM – 5:00 PM</span>
+        </div>
+        <p class="popup-desc" id="pDesc"></p>
+        <div class="popup-tags" id="pTags"></div>
+        <div class="popup-actions">
+          <button class="pa-btn pa-secondary" onclick="popupSetOrigin()">I'm Here</button>
+          <button class="pa-btn pa-primary" onclick="popupGoHere()">Navigate Here</button>
+          <button class="pa-btn pa-secondary" onclick="shareRoom()" style="flex: 0 0 auto; width: 44px; padding: 10px 0;">🔗</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:' && !location.hostname.includes('claudeusercontent.com')) {
+      navigator.serviceWorker.register('sw.js').then(() => console.log('PWA Offline Ready')).catch(console.error);
+    }
+  </script>
+</body>
+
+</html>

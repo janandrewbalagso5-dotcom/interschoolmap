@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Node / npm (if ever used)
+node_modules/
+npm-debug.log*
+
+# Build / dist output
+dist/
+build/
+
+# Env files
+.env
+.env.local
+
+# Logs
+*.log
