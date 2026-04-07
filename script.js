@@ -1,16 +1,16 @@
-// GPS POLYGON ANCHORS — exact roof corners from Google Maps
+﻿// GPS POLYGON ANCHORS â€” exact roof corners from Google Maps
 var GPS = {
   nb: [
-    [17.026607, 121.628844], // A — top-left
-    [17.026795, 121.629841], // B — top-right
-    [17.026664, 121.629867], // C — bottom-right
-    [17.026475, 121.628870]  // D — bottom-left
+    [17.026607, 121.628844], // A â€” top-left
+    [17.026795, 121.629841], // B â€” top-right
+    [17.026664, 121.629867], // C â€” bottom-right
+    [17.026475, 121.628870]  // D â€” bottom-left
   ],
   be: [
-    [17.026542, 121.628652], // E — top-left
-    [17.026564, 121.628830], // F — top-right (widened, below NB boundary)
-    [17.025724, 121.629000], // G — bottom-right (widened, south of NB)
-    [17.025708, 121.628811]  // H — bottom-left
+    [17.026542, 121.628652], // E â€” top-left
+    [17.026564, 121.628830], // F â€” top-right (widened, below NB boundary)
+    [17.025724, 121.629000], // G â€” bottom-right (widened, south of NB)
+    [17.025708, 121.628811]  // H â€” bottom-left
   ]
 };
 
@@ -21,19 +21,19 @@ var CAMPUS_BOUNDS = [
   [17.026900, 121.630000]
 ];
 
-// ROOM DATA — pixel coords within each building's SVG canvas
+// ROOM DATA â€” pixel coords within each building's SVG canvas
 var NB_SVG_W = 978, NB_SVG_H = 155;
 var BE_SVG_W = 480, BE_SVG_H = 720;
 
 var FL = { ground: 'Ground Floor', second: '2nd Floor', third: '3rd Floor' };
 var HOURS = {
-  office: 'Mon–Fri  7:30 AM – 5:00 PM',
-  library: 'Mon–Sat  7:00 AM – 6:00 PM',
-  lab: 'Mon–Fri  7:00 AM – 5:00 PM',
+  office: 'Mon-Fri  7:30 AM - 5:00 PM',
+  library: 'Mon-Sat  7:00 AM - 6:00 PM',
+  lab: 'Mon-Fri  7:00 AM - 5:00 PM',
   classroom: 'Varies by schedule',
   toilet: 'Always Open',
   stair: 'Always Open',
-  default: 'Mon–Fri  7:00 AM – 5:00 PM'
+  default: 'Mon-Fri  7:00 AM - 5:00 PM'
 };
 
 function mk(id, lb, tp, x, y, w, h, desc, tags, icon) {
@@ -67,9 +67,9 @@ var DATA = {
       second: {
         label: '2nd Floor', rooms: [
           mk('nb-2-stl', 'STAIR', 'stair', 0, 0, 36, 120, 'Main staircase.', ['Accessible']),
-          mk('nb-2-lib1', 'Library', 'library', 38, 0, 118, 120, 'Library — reading.', ['Library', 'Reading']),
-          mk('nb-2-lib2', 'Library', 'library', 158, 0, 74, 120, 'Library — digital.', ['Library', 'Digital']),
-          mk('nb-2-lib3', 'Library', 'library', 234, 0, 74, 120, 'Library — references.', ['Library', 'Digital']),
+          mk('nb-2-lib1', 'Library', 'library', 38, 0, 118, 120, 'Library - reading.', ['Library', 'Reading']),
+          mk('nb-2-lib2', 'Library', 'library', 158, 0, 74, 120, 'Library - digital.', ['Library', 'Digital']),
+          mk('nb-2-lib3', 'Library', 'library', 234, 0, 74, 120, 'Library - references.', ['Library', 'Digital']),
           mk('nb-2-r205', 'Room 205', 'classroom', 310, 0, 74, 120, 'College classroom.', ['College']),
           mk('nb-2-r206', 'Room 206', 'classroom', 386, 0, 74, 120, 'College classroom.', ['College']),
           mk('nb-2-comp', 'Comp Lab', 'lab', 462, 0, 74, 120, 'Computer lab.', ['Computer', 'Lab']),
@@ -170,7 +170,7 @@ var QUICK = [
 // ============================================================
 // POLYGON OVERLAY SYSTEM
 // Core idea: each building has a GPS polygon. We compute a
-// 2D affine transform from SVG-pixel space → Leaflet layer-point
+// 2D affine transform from SVG-pixel space â†’ Leaflet layer-point
 // space and apply it as a CSS matrix transform.
 // ============================================================
 
@@ -199,7 +199,7 @@ function computeTransform(bk) {
   var mapVx = { x: ptB.x - ptA.x, y: ptB.y - ptA.y };
   var mapVy = { x: ptD.x - ptA.x, y: ptD.y - ptA.y };
 
-  // Affine: [a c e; b d f] where the transform maps svg→map
+  // Affine: [a c e; b d f] where the transform maps svgâ†’map
   // For the X column (how map moves per svg-x pixel):
   //   We scale svgVx to produce mapVx
   var scaleX = Math.sqrt(mapVx.x * mapVx.x + mapVx.y * mapVx.y) /
@@ -224,7 +224,7 @@ function applyOverlayTransform(bk) {
   var el = buildingOverlays[bk];
   if (!el || !map) return;
   var t = computeTransform(bk);
-  // CSS matrix(a,b,c,d,e,f) — column-major 2D affine
+  // CSS matrix(a,b,c,d,e,f) â€” column-major 2D affine
   el.style.transform = 'matrix(' + t.a + ',' + t.b + ',' + t.c + ',' + t.d + ',' + t.e + ',' + t.f + ')';
   el.style.transformOrigin = '0 0';
 }
@@ -272,8 +272,8 @@ function initLeaflet() {
       ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
       : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     var attribution = style === '3d'
-      ? '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/">HOT</a>'
-      : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+      ? 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/">HOT</a>'
+      : 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
     glLayer = L.tileLayer(tileUrl, {
       attribution: attribution,
       maxNativeZoom: 19, maxZoom: 22
@@ -324,7 +324,7 @@ function buildBuildingHTML(bk) {
   var h = '<div class="bldg" id="bc-' + bk + '" style="width:' + bd.svgW + 'px;">';
   h += '<div class="bldg-head">';
   h += '<div class="bldg-name ' + (bk === 'be' ? 'be-color' : 'nb-color') + '">' + bd.name + '</div>';
-  h += '<div class="floor-tabs" id="ft-' + bk + '">';
+  h += '<div class="floor-tabs" id="ft-' + bk + '" aria-label="Floor switcher for ' + bd.name + '">';
   fks.forEach(function (fk) {
     h += '<button class="ftab' + (fk === af ? ' on-' + bk : '') + '" onclick="switchF(\'' + bk + '\',\'' + fk + '\')">' + bd.floors[fk].label + '</button>';
   });
@@ -394,7 +394,7 @@ function makeSVG(bk, fk) {
         if (isV) s += '<line x1="' + (r.x + wt) + '" y1="' + (r.y + r.h / steps * i) + '" x2="' + (r.x + r.w - wt) + '" y2="' + (r.y + r.h / steps * i) + '" stroke="#777" stroke-width="0.7"/>';
         else s += '<line x1="' + (r.x + r.w / steps * i) + '" y1="' + (r.y + wt) + '" x2="' + (r.x + r.w / steps * i) + '" y2="' + (r.y + r.h - wt) + '" stroke="#777" stroke-width="0.7"/>';
       }
-      s += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="middle" font-size="' + (Math.min(r.w, r.h) * 0.45) + '" fill="rgba(80,80,80,.5)">↑</text>';
+      s += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="middle" font-size="' + (Math.min(r.w, r.h) * 0.45) + '" fill="rgba(80,80,80,.5)">â†‘</text>';
     }
     if (r.type !== 'stair' && r.type !== 'toilet' && r.w >= 36 && r.h >= 32) {
       var nw = Math.max(1, Math.floor(r.w / 18));
@@ -451,11 +451,19 @@ var arDeviceHeading = 0, lastStepGPS = null, STEP_ADV = 8;
 var arTravelerT = 0, arMapDotProgress = 0;
 var arStableDist = null, arStableBadgeGPS = null;
 var arLaunchDist = null;
+var arHasHeading = false;
+var arVideoMirrorApplied = false;
+var arOverlayMirrored = false;
 var arCompassHandler = null;
 var arMapNeedsRedraw = true;
 var arLastCamFrameAt = 0;
 var arLastMapFrameAt = 0;
 var overlaySyncQueued = false;
+var voiceGuidanceSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+var voiceGuidanceEnabled = voiceGuidanceSupported;
+var voiceAnnouncementState = { destId: null, near: false, arrived: false, lastStep: -1, lastKey: '', lastAt: 0 };
+var voiceAnnouncementUtterance = null;
+var voiceGuidanceVoices = [];
 var cachedAR = {
   camSection: null,
   mapSection: null,
@@ -537,7 +545,7 @@ function recenterUser() {
 // GPS TRACKING
 // ============================================================
 function startGPS() {
-  if (!navigator.geolocation) { toast('📍 GPS not available — tap a room to set location.'); return; }
+  if (!navigator.geolocation) { toast('📍 GPS not available - tap a room to set location.'); return; }
   document.getElementById('locText').textContent = 'Locating...';
 
   var opts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
@@ -576,14 +584,22 @@ function onGPSUpdate(p) {
     var toR = getRoom(destId);
     var destGPSPos = roomToGPS(toR);
     var dist = gpsDistance(lat, lng, destGPSPos.lat, destGPSPos.lng);
+    if (voiceAnnouncementState.destId !== destId) resetVoiceGuidanceState();
+    if (dist <= 18 && !voiceAnnouncementState.near) {
+      voiceAnnouncementState.near = true;
+      speakGuidance('You are near ' + toSpokenText(toR.label) + '.', 'near:' + destId, 0);
+    }
     if (dist < 8) {
       if (arrivedToastShownId !== destId) {
         toast('🎯 You are at ' + toR.label.replace('\n', ' ') + '!');
         arrivedToastShownId = destId;
       }
+      if (!voiceAnnouncementState.arrived) {
+        voiceAnnouncementState.arrived = true;
+        speakGuidance('You have arrived at ' + toSpokenText(toR.label) + '.', 'arrive:' + destId, 0);
+      }
     } else {
       arrivedToastShownId = null;
-      // Auto-update origin as user walks
       var cr = getClosestRoomToGPS(lat, lng);
       if (cr && cr.id !== destId && cr.id !== youId) {
         youId = cr.id;
@@ -605,7 +621,7 @@ function onGPSError(e) {
   console.warn('GPS:', e.message);
   document.getElementById('locBadge').style.borderColor = 'rgba(245,158,11,.4)';
   document.getElementById('locText').textContent = 'Tap room to locate';
-  toast('📍 GPS unavailable — tap any room to set your location.');
+  toast('📍 GPS unavailable - tap any room to set your location.');
 }
 
 function getClosestRoomToGPS(lat, lng) {
@@ -620,8 +636,16 @@ function getClosestRoomToGPS(lat, lng) {
 
 function startCompass() {
   if (!window.DeviceOrientationEvent) return;
+  if (!canUseDeviceCompass()) return;
   if (arCompassHandler) return;
-  arCompassHandler = function (e) { var a = e.webkitCompassHeading || e.alpha || 0; if (a !== null) arDeviceHeading = a; };
+  arCompassHandler = function (e) {
+    var heading = null;
+    if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) heading = e.webkitCompassHeading;
+    else if (e.absolute === true && typeof e.alpha === 'number' && !isNaN(e.alpha)) heading = (360 - e.alpha + 360) % 360;
+    if (heading === null) return;
+    arHasHeading = true;
+    arDeviceHeading = heading;
+  };
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
     DeviceOrientationEvent.requestPermission().then(function (p) { if (p === 'granted' && arCompassHandler) window.addEventListener('deviceorientation', arCompassHandler, true); }).catch(function () { });
   } else {
@@ -661,11 +685,16 @@ function quickNavigate(id) {
   if (!youId) {
     if (userGPS.lat && onCampus) {
       var cr = getClosestRoomToGPS(userGPS.lat, userGPS.lng);
-      if (cr && cr.id !== id) { youId = cr.id; destId = id; highlight(); drawPath(); showSidebar(); saveRecent(youId, destId); renderRecent(); toast('🎯 Route ready!'); return; }
+      if (cr && cr.id !== id) {
+        youId = cr.id; destId = id; highlight(); drawPath(); showSidebar(); saveRecent(youId, destId); renderRecent(); toast('🎯 Route ready!');
+        announceRouteGuidance(getRoom(youId), getRoom(destId));
+        return;
+      }
     }
     destId = id; highlight(); toast('📍 Tap your current location on the map first.'); return;
   }
   destId = id; highlight(); drawPath(); showSidebar(); toast('🎯 Route set!');
+  announceRouteGuidance(getRoom(youId), getRoom(destId));
 }
 
 function getRecent() { try { return JSON.parse(localStorage.getItem('olpc_r') || '[]'); } catch (e) { return []; } }
@@ -689,6 +718,7 @@ function renderRecent() {
 function loadRecent(i) {
   var rs = getRecent(), r = rs[i]; if (!r) return;
   youId = r.from; destId = r.to; highlight(); drawPath(); showSidebar(); toast('🕐 Recent route loaded');
+  announceRouteGuidance(getRoom(youId), getRoom(destId));
 }
 function delRecent(e, i) {
   e.stopPropagation(); var rs = getRecent(); rs.splice(i, 1);
@@ -714,6 +744,136 @@ function allRooms() {
   return out;
 }
 
+function getRoomIcon(room) {
+  var icon = room && typeof room.icon === 'string' ? room.icon : '';
+  if (icon && !/[ðâÂ]/.test(icon) && icon.trim().length <= 4) return icon;
+
+  var byType = {
+    classroom: '📘',
+    lab: '🧪',
+    library: '📚',
+    office: '🏢',
+    toilet: '🚻',
+    stair: '🪜',
+    corridor: '➡️'
+  };
+  return byType[room && room.type] || '📍';
+}
+
+function canUseDeviceCompass() {
+  if (typeof navigator === 'undefined') return false;
+  var ua = navigator.userAgent || '';
+  var mobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+  var coarsePointer = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  return mobileUA || coarsePointer;
+}
+
+function toSpokenText(text) {
+  return String(text || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/·/g, ',')
+    .replace(/✓/g, '')
+    .trim();
+}
+
+function getVoiceGuidancePreference() {
+  var saved = localStorage.getItem('olpc-voice-guidance');
+  if (saved === 'off') return false;
+  if (saved === 'on') return true;
+  return true;
+}
+
+function updateVoiceToggleUI() {
+  var btn = document.getElementById('voiceToggle');
+  var icon = document.getElementById('voiceToggleIcon');
+  var label = document.getElementById('voiceToggleLabel');
+  if (!btn || !icon || !label) return;
+
+  btn.classList.toggle('is-off', !voiceGuidanceEnabled);
+  btn.classList.toggle('is-disabled', !voiceGuidanceSupported);
+  btn.setAttribute('aria-pressed', String(voiceGuidanceEnabled));
+  btn.setAttribute('aria-label', voiceGuidanceSupported
+    ? (voiceGuidanceEnabled ? 'Turn voice guidance off' : 'Turn voice guidance on')
+    : 'Voice guidance unavailable');
+
+  if (!voiceGuidanceSupported) {
+    icon.textContent = '🔇';
+    label.textContent = 'No Voice';
+    return;
+  }
+
+  icon.textContent = voiceGuidanceEnabled ? '🔊' : '🔈';
+  label.textContent = voiceGuidanceEnabled ? 'Voice On' : 'Voice Off';
+}
+
+function resetVoiceGuidanceState() {
+  voiceAnnouncementState.destId = destId;
+  voiceAnnouncementState.near = false;
+  voiceAnnouncementState.arrived = false;
+  voiceAnnouncementState.lastStep = -1;
+}
+
+function loadVoiceGuidanceVoices() {
+  if (!voiceGuidanceSupported) return;
+  voiceGuidanceVoices = window.speechSynthesis.getVoices();
+}
+
+function getPreferredVoice() {
+  if (!voiceGuidanceVoices.length) loadVoiceGuidanceVoices();
+  return voiceGuidanceVoices.find(function (voice) { return /^en(-|_)/i.test(voice.lang || ''); }) ||
+    voiceGuidanceVoices.find(function (voice) { return /english/i.test(voice.name || ''); }) ||
+    voiceGuidanceVoices[0] ||
+    null;
+}
+
+function speakGuidance(message, key, minGapMs) {
+  if (!voiceGuidanceSupported || !voiceGuidanceEnabled || !message) return;
+  var now = Date.now();
+  var gap = typeof minGapMs === 'number' ? minGapMs : 5000;
+  if (key && voiceAnnouncementState.lastKey === key && now - voiceAnnouncementState.lastAt < gap) return;
+
+  var spoken = toSpokenText(message);
+  if (!spoken) return;
+
+  try {
+    window.speechSynthesis.cancel();
+    voiceAnnouncementUtterance = new SpeechSynthesisUtterance(spoken);
+    var preferredVoice = getPreferredVoice();
+    if (preferredVoice) voiceAnnouncementUtterance.voice = preferredVoice;
+    voiceAnnouncementUtterance.rate = 1;
+    voiceAnnouncementUtterance.pitch = 1;
+    window.speechSynthesis.speak(voiceAnnouncementUtterance);
+    voiceAnnouncementState.lastKey = key || spoken;
+    voiceAnnouncementState.lastAt = now;
+  } catch (e) { }
+}
+
+function applyVoiceGuidancePreference(enabled) {
+  voiceGuidanceEnabled = !!enabled && voiceGuidanceSupported;
+  if (!voiceGuidanceEnabled && voiceGuidanceSupported) window.speechSynthesis.cancel();
+  updateVoiceToggleUI();
+}
+
+function toggleVoiceGuidance() {
+  if (!voiceGuidanceSupported) {
+    updateVoiceToggleUI();
+    toast('🔇 Voice guidance is not supported in this browser.');
+    return;
+  }
+
+  var next = !voiceGuidanceEnabled;
+  localStorage.setItem('olpc-voice-guidance', next ? 'on' : 'off');
+  applyVoiceGuidancePreference(next);
+  if (next) speakGuidance('Voice guidance on.', 'voice:on', 0);
+}
+
+function announceRouteGuidance(fromRoom, toRoom) {
+  if (!fromRoom || !toRoom) return;
+  resetVoiceGuidanceState();
+  speakGuidance('Route ready. Head to ' + toSpokenText(toRoom.label) + '. ' + estimateWalkTime(fromRoom, toRoom) + '.', 'route:' + toRoom.id, 0);
+}
+
 // ============================================================
 // TAP & POPUP
 // ============================================================
@@ -721,18 +881,24 @@ function tapRoom(id, bk, fk) {
   if (!youId) {
     if (userGPS.lat && onCampus) {
       var cr = getClosestRoomToGPS(userGPS.lat, userGPS.lng);
-      if (cr && cr.id !== id) { youId = cr.id; destId = id; highlight(); drawPath(); showSidebar(); saveRecent(youId, destId); renderRecent(); toast('🎯 Route ready!'); return; }
+      if (cr && cr.id !== id) {
+        youId = cr.id; destId = id; highlight(); drawPath(); showSidebar(); saveRecent(youId, destId); renderRecent(); toast('🎯 Route ready!');
+        announceRouteGuidance(getRoom(youId), getRoom(destId));
+        return;
+      }
     }
-    youId = id; highlight(); toast('📍 You are at: ' + getRoom(id).label.replace('\n', ' ') + ' — tap destination'); renderRecent(); return;
+    youId = id; highlight(); toast('📍 You are at: ' + getRoom(id).label.replace('\n', ' ') + ' - tap destination'); renderRecent(); return;
   }
-  if (id === youId) { youId = null; destId = null; clearPathSVG(); highlight(); hideSidebar(); toast('📍 Cleared.'); return; }
+  if (id === youId) { youId = null; destId = null; resetVoiceGuidanceState(); clearPathSVG(); highlight(); hideSidebar(); toast('📍 Cleared.'); return; }
   destId = id; highlight(); drawPath(); showSidebar(); saveRecent(youId, destId); renderRecent(); toast('🎯 Route ready!');
+  announceRouteGuidance(getRoom(youId), getRoom(destId));
 }
 
 function showRoomPopup(id) {
   var r = getRoom(id); if (!r) return;
   pendingId = id;
   var bn = r.bk === 'be' ? 'Basic Education' : 'New Building';
+  document.getElementById('pIco').textContent = getRoomIcon(r);
   document.getElementById('pTitle').textContent = r.label.replace('\n', ' ');
   document.getElementById('pSub').textContent = bn + ' · ' + (FL[r.fk] || r.fk);
   document.getElementById('pDesc').textContent = r.desc || '';
@@ -743,13 +909,14 @@ function showRoomPopup(id) {
 function closePopup() { document.getElementById('popupOverlay').classList.remove('show'); }
 function closePopupBg(e) { if (e.target === document.getElementById('popupOverlay')) closePopup(); }
 function popupSetOrigin() {
-  if (!pendingId) return; closePopup(); youId = pendingId; destId = null; clearPathSVG(); highlight(); hideSidebar();
+  if (!pendingId) return; closePopup(); youId = pendingId; destId = null; resetVoiceGuidanceState(); clearPathSVG(); highlight(); hideSidebar();
   toast('📍 Location set: ' + getRoom(youId).label.replace('\n', ' '));
 }
 function popupGoHere() {
   if (!pendingId) return; closePopup();
   if (!youId) { youId = pendingId; highlight(); toast('📍 Start set. Tap destination.'); return; }
   destId = pendingId; highlight(); drawPath(); showSidebar(); saveRecent(youId, destId); renderRecent(); toast('🎯 Route set!');
+  announceRouteGuidance(getRoom(youId), getRoom(destId));
 }
 
 function shareRoom() {
@@ -779,19 +946,14 @@ function fallbackCopyTextToClipboard(text) {
       toast('⚠️ Failed to copy link.');
     });
   } else {
-    // Fallback for older browsers
-    var textArea = document.createElement("textarea");
+    var textArea = document.createElement('textarea');
     textArea.value = text;
-    textArea.style.top = "0";
-    textArea.style.left = "0";
-    textArea.style.position = "fixed";
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
     try {
-      var successful = document.execCommand('copy');
-      if (successful) toast('🔗 Link copied to clipboard!');
-      else toast('⚠️ Failed to copy link.');
+      document.execCommand('copy');
+      toast('🔗 Link copied to clipboard!');
     } catch (err) {
       toast('⚠️ Failed to copy link.');
     }
@@ -810,7 +972,7 @@ function highlight() {
 }
 
 // ============================================================
-// PATH DRAWING — SVG inside each building's overlay
+// PATH DRAWING â€” SVG inside each building's overlay
 // ============================================================
 function clearPathSVG() {
   document.querySelectorAll('[id^="pg-"]').forEach(function (g) { g.innerHTML = ''; });
@@ -915,7 +1077,11 @@ function hideSidebar() {
   document.getElementById('routePanel').classList.remove('show');
   renderRecent();
 }
-function clearRoute() { youId = null; destId = null; arStepIdx = 0; arLaunchDist = null; arPathDots = []; clearPathSVG(); highlight(); hideSidebar(); toast('📍 Cleared.'); }
+function clearRoute() {
+  youId = null; destId = null; arStepIdx = 0; arLaunchDist = null; arPathDots = [];
+  resetVoiceGuidanceState();
+  clearPathSVG(); highlight(); hideSidebar(); toast('📍 Cleared.');
+}
 
 // ============================================================
 // AR NAVIGATION
@@ -925,6 +1091,7 @@ function launchAR() {
   arStepIdx = 0;
   arStableDist = null;
   arStableBadgeGPS = null;
+  resetVoiceGuidanceState();
   var to = getRoom(destId), fr = getRoom(youId);
   var startGPS = (userGPS.lat && userGPS.accuracy < 60) ? { lat: userGPS.lat, lng: userGPS.lng } : roomToGPS(fr);
   var destGPS = roomToGPS(to);
@@ -932,7 +1099,7 @@ function launchAR() {
   var bn = to.bk === 'be' ? 'Basic Education' : 'New Building';
   document.getElementById('arDestNamePill').textContent = to.label.replace('\n', ' ');
   document.getElementById('arDestSubPill').textContent = bn + ' · ' + (FL[to.fk] || to.fk);
-  document.getElementById('arDestIcon').textContent = to.icon || '🎯';
+  document.getElementById('arDestIcon').textContent = getRoomIcon(to);
   document.getElementById('arEtaChip').textContent = '🚶 ' + estimateWalkTime(fr, to);
   arSteps = buildSteps(fr, to);
   buildARPathDots(); updateARStepUI();
@@ -943,6 +1110,7 @@ function launchAR() {
   arLastMapFrameAt = 0;
   startCamera(); startARLoop(); startCompass();
   lastStepGPS = userGPS.lat ? { lat: userGPS.lat, lng: userGPS.lng } : null;
+  if (arSteps.length > 1) speakGuidance('AR navigation started. ' + toSpokenText(arSteps[1].text), 'ar:start:' + destId, 0);
 }
 
 function buildARPathDots() {
@@ -970,7 +1138,15 @@ async function startCamera() {
   var vid = document.getElementById('arVideo'), fb = document.getElementById('camFallback');
   try {
     arStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
-    vid.srcObject = arStream; vid.style.display = 'block'; fb.style.display = 'none';
+    var track = arStream.getVideoTracks()[0];
+    var settings = track && typeof track.getSettings === 'function' ? track.getSettings() : {};
+    var preferMirroredPreview = settings && settings.facingMode === 'user';
+    arVideoMirrorApplied = preferMirroredPreview;
+    arOverlayMirrored = preferMirroredPreview;
+    vid.srcObject = arStream;
+    vid.style.transform = arVideoMirrorApplied ? 'scaleX(-1)' : 'scaleX(1)';
+    vid.style.display = 'block';
+    fb.style.display = 'none';
   } catch (e) { vid.style.display = 'none'; fb.style.display = 'flex'; }
 }
 
@@ -1012,6 +1188,12 @@ function normalizeHeadingDelta(delta) {
   return delta;
 }
 
+function getARHorizontalOffset(diff, laneWidth) {
+  if (!arHasHeading) return 0;
+  var signedDiff = arOverlayMirrored ? -diff : diff;
+  return Math.max(-laneWidth, Math.min(laneWidth, (signedDiff / 60) * laneWidth));
+}
+
 function drawARCamOverlay(canvas, ctx) {
   ctx = ctx || canvas.getContext('2d');
   var W = canvas.width, H = canvas.height;
@@ -1033,7 +1215,7 @@ function drawARCamOverlay(canvas, ctx) {
       var diff = normalizeHeadingDelta(bearing - arDeviceHeading);
       var depth = 1 - Math.pow(1 - t, 1.35);
       var laneWidth = (1 - depth) * (W * .20) + W * .015;
-      var x = cx + Math.max(-laneWidth, Math.min(laneWidth, (diff / 60) * laneWidth));
+      var x = cx + getARHorizontalOffset(diff, laneWidth);
       var y = baseY - (baseY - horizY) * depth;
       var r = 2.5 + depth * 8;
       routeDots.push({ x: x, y: y, r: r, depth: depth, alpha: .16 + depth * .42 });
@@ -1046,7 +1228,7 @@ function drawARCamOverlay(canvas, ctx) {
       var toR = getRoom(destId), destGPSPos = roomToGPS(toR);
       var targetBearing = calculateBearing(userGPS.lat, userGPS.lng, destGPSPos.lat, destGPSPos.lng);
       var diff = normalizeHeadingDelta(targetBearing - arDeviceHeading);
-      curveX = Math.max(-W * .28, Math.min(W * .28, (diff / 65) * (W * .24)));
+      curveX = arHasHeading ? getARHorizontalOffset(diff, W * .26) : 0;
     }
     for (var i = 0; i < numDots; i++) {
       var t2 = i / (numDots - 1), persp = .28 + t2 * .72;
@@ -1382,14 +1564,28 @@ function updateARFromGPS() {
     var shownDist = arStableDist === null ? dist : arStableDist;
     document.getElementById('arDistBadge').textContent = shownDist < 5 ? 'Arrived!' : Math.round(shownDist) + 'm away';
     arMapNeedsRedraw = true;
-    if (dist < 8 && arStepIdx < arSteps.length - 1) { arStepIdx = arSteps.length - 1; updateARStepUI(); toast('🎯 You have arrived!'); return; }
+    if (dist < 8 && arStepIdx < arSteps.length - 1) {
+      arStepIdx = arSteps.length - 1;
+      updateARStepUI();
+      toast('🎯 You have arrived!');
+      return;
+    }
   }
   if (lastStepGPS && userGPS.accuracy < 30) {
     var moved = gpsDistance(userGPS.lat, userGPS.lng, lastStepGPS.lat, lastStepGPS.lng);
-    if (moved > STEP_ADV && arStepIdx < arSteps.length - 1) { arStepIdx++; updateARStepUI(); lastStepGPS = { lat: userGPS.lat, lng: userGPS.lng }; toast('✅ Step ' + arStepIdx + ' complete'); }
+    if (moved > STEP_ADV && arStepIdx < arSteps.length - 1) {
+      arStepIdx++;
+      updateARStepUI();
+      lastStepGPS = { lat: userGPS.lat, lng: userGPS.lng };
+      toast('✅ Step ' + arStepIdx + ' complete');
+      if (voiceAnnouncementState.lastStep !== arStepIdx) {
+        voiceAnnouncementState.lastStep = arStepIdx;
+        var nextStep = arSteps[arStepIdx];
+        if (nextStep) speakGuidance('Next: ' + toSpokenText(nextStep.text), 'step:' + destId + ':' + arStepIdx, 0);
+      }
+    }
   }
 }
-
 function closeAR() {
   document.getElementById('arView').classList.remove('show');
   if (arStream) { arStream.getTracks().forEach(function (t) { t.stop(); }); arStream = null; }
@@ -1399,6 +1595,9 @@ function closeAR() {
   arStableDist = null;
   arStableBadgeGPS = null;
   arLaunchDist = null;
+  arHasHeading = false;
+  arVideoMirrorApplied = false;
+  arOverlayMirrored = false;
   arPathDots = [];
   arMapNeedsRedraw = true;
 }
@@ -1439,11 +1638,10 @@ var si = document.getElementById('searchInput'), sd = document.getElementById('s
 si.addEventListener('input', function () {
   var q = si.value.trim().toLowerCase(); if (!q) { sd.classList.remove('open'); return; }
   var ms = allRooms().filter(function (r) { return r.label.toLowerCase().includes(q) || (r.tags && r.tags.some(function (t) { return t.toLowerCase().includes(q); })); }).slice(0, 8);
-  if (!ms.length) { sd.classList.remove('open'); return; }
-  sd.innerHTML = ms.map(function (r) {
+  if (!ms.length) { sd.classList.remove('open'); return; }  sd.innerHTML = ms.map(function (r) {
     return '<div class="sd-item" onclick="pickSearch(\'' + r.id + '\',\'' + r.bk + '\',\'' + r.fk + '\')">' +
       '<span class="sd-badge ' + (r.bk === 'be' ? 'be-badge' : 'nb-badge') + '">' + (r.bk === 'be' ? 'BE' : 'NB') + '</span>' +
-      r.label.replace('\n', ' ') + ' — ' + (FL[r.fk] || r.fk) + '</div>';
+      r.label.replace('\n', ' ') + ' - ' + (FL[r.fk] || r.fk) + '</div>';
   }).join('');
   sd.classList.add('open');
 });
@@ -1485,9 +1683,82 @@ window.addEventListener('online', function() {
   toast('📡 Back online!');
 });
 
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  var icon = document.getElementById('themeToggleIcon');
+  var label = document.getElementById('themeToggleLabel');
+  var btn = document.getElementById('themeToggle');
+  if (icon) icon.textContent = theme === 'dark' ? '☀' : '◐';
+  if (label) label.textContent = theme === 'dark' ? 'Light' : 'Dark';
+  if (btn) {
+    btn.setAttribute('aria-pressed', String(theme === 'dark'));
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+  }
+}
+
+function getPreferredTheme() {
+  var savedTheme = localStorage.getItem('olpc-theme');
+  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function toggleTheme() {
+  var nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('olpc-theme', nextTheme);
+  applyTheme(nextTheme);
+}
+
+function normalizeUIStrings() {
+  HOURS.office = 'Mon-Fri  7:30 AM - 5:00 PM';
+  HOURS.library = 'Mon-Sat  7:00 AM - 6:00 PM';
+  HOURS.lab = 'Mon-Fri  7:00 AM - 5:00 PM';
+  HOURS.default = 'Mon-Fri  7:00 AM - 5:00 PM';
+
+  QUICK = [
+    { id: 'nb-2-lib1', icon: '📚', label: 'Library', sub: 'NB · 2nd Floor' },
+    { id: 'nb-2-lib2', icon: '📚', label: 'Library', sub: 'NB · 2nd Floor' },
+    { id: 'nb-1-reg', icon: '📋', label: 'Registrar', sub: 'NB · Ground' },
+    { id: 'nb-1-guid', icon: '💬', label: 'Guidance', sub: 'NB · Ground' },
+    { id: 'nb-2-comp', icon: '💻', label: 'Comp Lab', sub: 'NB · 2nd Floor' },
+    { id: 'be-2-princ', icon: '🏫', label: 'BE Principal', sub: 'BE · 2nd Floor' }
+  ];
+
+  Object.keys(DATA).forEach(function (bk) {
+    Object.keys(DATA[bk].floors).forEach(function (fk) {
+      DATA[bk].floors[fk].rooms.forEach(function (room) {
+        room.icon = room.icon || '🚪';
+        if (room.desc) {
+          room.desc = room.desc
+            .replace(/â€”/g, '-')
+            .replace(/â€“/g, '-')
+            .replace(/Â·/g, '·');
+        }
+      });
+    });
+  });
+}
+
+var themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+if (themeMediaQuery && typeof themeMediaQuery.addEventListener === 'function') {
+  themeMediaQuery.addEventListener('change', function (event) {
+    if (localStorage.getItem('olpc-theme')) return;
+    applyTheme(event.matches ? 'dark' : 'light');
+  });
+}
+
+if (voiceGuidanceSupported) {
+  loadVoiceGuidanceVoices();
+  if (typeof window.speechSynthesis.addEventListener === 'function') {
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoiceGuidanceVoices);
+  }
+}
+
 // ============================================================
 // BOOTSTRAP
 // ============================================================
+normalizeUIStrings();
+applyTheme(getPreferredTheme());
+applyVoiceGuidancePreference(getVoiceGuidancePreference());
 initLeaflet();
 renderQuickGrid();
 renderRecent();
@@ -1501,14 +1772,12 @@ if (destParam) {
     // Wait briefly for GPS to try to locate user before setting route
     setTimeout(function() {
       tapRoom(dRoom.id, dRoom.bk, dRoom.fk);
-    }, 800);
-  } else {
+    }, 800);  } else {
     toast('📍 Acquiring GPS...');
   }
 } else {
   toast('📍 Acquiring GPS...');
 }
-
 function shareRoute() {
   if (!youId || !destId) return;
   var fromRoom = getRoom(youId);
@@ -1529,3 +1798,6 @@ function shareRoute() {
     fallbackCopyTextToClipboard(url);
   }
 }
+
+
+

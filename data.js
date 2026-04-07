@@ -1,4 +1,3 @@
-﻿// ROOM COLORS
 var RC = {
   classroom: { f: 'rgba(59,130,246,.12)', s: 'rgba(37,99,235,.45)' },
   lab: { f: 'rgba(6,160,90,.12)', s: 'rgba(5,150,105,.42)' },
@@ -8,9 +7,22 @@ var RC = {
   stair: { f: 'rgba(217,119,6,.14)', s: 'rgba(245,158,11,.42)' },
   corridor: { f: 'rgba(148,163,184,.18)', s: 'rgba(100,116,139,.3)' }
 };
+
 var FL = { ground: 'Ground Floor', second: '2nd Floor', third: '3rd Floor' };
-function mk(id, lb, tp, x, y, w, h, desc, tags, icon) { return { id, label: lb, type: tp, x, y, w, h, desc: desc || '', tags: tags || [], icon: icon || 'ðŸšª' }; }
-var HOURS = { office: 'Monâ€“Fri  7:30 AM â€“ 5:00 PM', library: 'Monâ€“Sat  7:00 AM â€“ 6:00 PM', lab: 'Monâ€“Fri  7:00 AM â€“ 5:00 PM', classroom: 'Varies by schedule', toilet: 'Always Open', stair: 'Always Open', default: 'Monâ€“Fri  7:00 AM â€“ 5:00 PM' };
+
+function mk(id, lb, tp, x, y, w, h, desc, tags, icon) {
+  return { id, label: lb, type: tp, x, y, w, h, desc: desc || '', tags: tags || [], icon: icon || '🚪' };
+}
+
+var HOURS = {
+  office: 'Mon-Fri  7:30 AM - 5:00 PM',
+  library: 'Mon-Sat  7:00 AM - 6:00 PM',
+  lab: 'Mon-Fri  7:00 AM - 5:00 PM',
+  classroom: 'Varies by schedule',
+  toilet: 'Always Open',
+  stair: 'Always Open',
+  default: 'Mon-Fri  7:00 AM - 5:00 PM'
+};
 
 var NB_SVG_W = 978;
 var NB_SVG_H = 155;
@@ -41,25 +53,25 @@ var DATA = {
           mk('nb-1-tf', 'F.Toilet', 'toilet', 885, 0, 46, 57, 'Female comfort room.', ['Facility']),
           mk('nb-1-tm', 'M.Toilet', 'toilet', 885, 59, 46, 61, 'Male comfort room.', ['Facility']),
           mk('nb-1-stl2', 'STAIR', 'stair', 933, 0, 38, 120, 'Secondary staircase.', ['Accessible']),
-          mk('nb-1-corr', 'CORRIDOR', 'corridor', 38, 122, 938, 28),
+          mk('nb-1-corr', 'CORRIDOR', 'corridor', 38, 122, 938, 28)
         ]
       },
       second: {
         label: '2nd Floor', rooms: [
           mk('nb-2-stl', 'STAIR', 'stair', 0, 0, 36, 120, 'Main staircase.', ['Accessible']),
-          mk('nb-2-lib1', 'Library', 'library', 38, 0, 118, 120, 'Library â€” reading & periodicals.', ['Library', 'Reading']),
-          mk('nb-2-lib2', 'Library', 'library', 158, 0, 74, 120, 'Library â€” digital & references.', ['Library', 'Digital']),
-          mk('nb-2-lib3', 'Library', 'library', 234, 0, 74, 120, 'Library â€” digital & references.', ['Library', 'Digital']),
+          mk('nb-2-lib1', 'Library', 'library', 38, 0, 118, 120, 'Library - reading & periodicals.', ['Library', 'Reading']),
+          mk('nb-2-lib2', 'Library', 'library', 158, 0, 74, 120, 'Library - digital & references.', ['Library', 'Digital']),
+          mk('nb-2-lib3', 'Library', 'library', 234, 0, 74, 120, 'Library - digital & references.', ['Library', 'Digital']),
           mk('nb-2-r205', 'Room 205', 'classroom', 310, 0, 74, 120, 'College classroom.', ['College']),
           mk('nb-2-r206', 'Room 206', 'classroom', 386, 0, 74, 120, 'College classroom.', ['College']),
-          mk('nb-2-comp', 'Comp Lab', 'lab', 462, 0, 74, 120, 'Computer lab.', ['Computer', 'Lab'],),
+          mk('nb-2-comp', 'Comp Lab', 'lab', 462, 0, 74, 120, 'Computer lab.', ['Computer', 'Lab']),
           mk('nb-2-r208', 'Room 208', 'classroom', 538, 0, 74, 120, 'College classroom.', ['College']),
           mk('nb-2-r209', 'Room 209', 'classroom', 614, 0, 74, 120, 'College classroom.', ['College']),
           mk('nb-2-r210', 'Room 210', 'classroom', 690, 0, 74, 120, 'College classroom.', ['College']),
           mk('nb-2-crime', 'Crime Lab', 'lab', 766, 0, 74, 120, 'Criminology lab.', ['Criminology', 'Lab']),
           mk('nb-2-r212', 'Room 212', 'classroom', 842, 0, 72, 120, 'College classroom.', ['College']),
           mk('nb-2-stl2', 'STAIR', 'stair', 916, 0, 36, 120, 'Secondary staircase.', ['Accessible']),
-          mk('nb-2-corr', 'CORRIDOR', 'corridor', 38, 122, 914, 28),
+          mk('nb-2-corr', 'CORRIDOR', 'corridor', 38, 122, 914, 28)
         ]
       },
       third: {
@@ -78,7 +90,7 @@ var DATA = {
           mk('nb-3-r311', 'Room 311', 'classroom', 738, 0, 68, 120, 'College classroom.', ['College']),
           mk('nb-3-cba', 'CBA\nVenture Lab', 'lab', 808, 0, 106, 120, 'CBA Venture Lab.', ['CBA', 'Business']),
           mk('nb-3-stl2', 'STAIR', 'stair', 916, 0, 36, 120, 'Secondary staircase.', ['Accessible']),
-          mk('nb-3-corr', 'CORRIDOR', 'corridor', 38, 122, 914, 28),
+          mk('nb-3-corr', 'CORRIDOR', 'corridor', 38, 122, 914, 28)
         ]
       }
     }
@@ -108,7 +120,7 @@ var DATA = {
           mk('be-g-tm2', 'M.Toilet', 'toilet', 2, 603, 62, 26, 'Male comfort room.', ['Facility']),
           mk('be-g-stl2', 'STAIR', 'stair', 66, 576, 32, 54, 'Staircase.', ['Accessible']),
           mk('be-g-corr-bot', 'CORRIDOR', 'corridor', 100, 576, 191, 54),
-          mk('be-g-corr-side', 'CORRIDOR', 'corridor', 157, 56, 130, 520),
+          mk('be-g-corr-side', 'CORRIDOR', 'corridor', 157, 56, 130, 520)
         ]
       },
       second: {
@@ -133,20 +145,18 @@ var DATA = {
           mk('be-2-tm', 'M.Toilet', 'toilet', 2, 603, 62, 26, 'Male comfort room.', ['Facility']),
           mk('be-2-pray', 'Prayer\nRoom', 'office', 290, 210, 70, 120, 'Prayer Room.', ['Chapel', 'Prayer']),
           mk('be-2-corr-top', 'CORRIDOR', 'corridor', 100, 576, 191, 54),
-          mk('be-2-corr-bot', 'CORRIDOR', 'corridor', 157, 56, 130, 520),
+          mk('be-2-corr-bot', 'CORRIDOR', 'corridor', 157, 56, 130, 520)
         ]
       }
-
     }
   }
 };
 
-// QUICK DESTS & RECENT
 var QUICK = [
-  { id: 'nb-2-lib1', icon: '', label: 'Library (1)', sub: 'NB Â· 2nd Floor' },
-  { id: 'nb-2-lib2', icon: '', label: 'Library (2)', sub: 'NB Â· 2nd Floor' },
-  { id: 'nb-1-reg', icon: '', label: 'Registrar', sub: 'NB Â· Ground' },
-  { id: 'nb-1-guid', icon: '', label: 'Guidance', sub: 'NB Â· Ground' },
-  { id: 'nb-2-comp', icon: '', label: 'Comp Lab', sub: 'NB Â· 2nd Floor' },
-  { id: 'be-2-princ', icon: '', label: 'BE Principal', sub: 'BE Â· 2nd Floor' },
+  { id: 'nb-2-lib1', icon: '📚', label: 'Library (1)', sub: 'NB · 2nd Floor' },
+  { id: 'nb-2-lib2', icon: '📚', label: 'Library (2)', sub: 'NB · 2nd Floor' },
+  { id: 'nb-1-reg', icon: '📋', label: 'Registrar', sub: 'NB · Ground' },
+  { id: 'nb-1-guid', icon: '💬', label: 'Guidance', sub: 'NB · Ground' },
+  { id: 'nb-2-comp', icon: '💻', label: 'Comp Lab', sub: 'NB · 2nd Floor' },
+  { id: 'be-2-princ', icon: '🏫', label: 'BE Principal', sub: 'BE · 2nd Floor' }
 ];

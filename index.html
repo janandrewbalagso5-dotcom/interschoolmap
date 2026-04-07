@@ -14,12 +14,10 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="logo">
       <div>
@@ -31,12 +29,19 @@
       </div>
     </div>
     <div class="search-wrap">
-      <input class="search-input" type="text" id="searchInput" placeholder="Search rooms and offices"
-        autocomplete="off">
+      <input class="search-input" type="text" id="searchInput" placeholder="Search rooms and offices" autocomplete="off">
       <div class="sdrop" id="sdrop"></div>
     </div>
 
     <div class="topbar-right">
+      <button class="voice-toggle" id="voiceToggle" type="button" onclick="toggleVoiceGuidance()" aria-label="Toggle voice guidance" aria-pressed="true">
+        <span class="voice-toggle-ico" id="voiceToggleIcon">&#128266;</span>
+        <span class="voice-toggle-label" id="voiceToggleLabel">Voice On</span>
+      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" aria-pressed="false">
+        <span class="theme-toggle-ico" id="themeToggleIcon">&#9681;</span>
+        <span class="theme-toggle-label" id="themeToggleLabel">Dark</span>
+      </button>
       <div class="loc-badge" id="locBadge" onclick="recenterUser()">
         <div class="loc-dot"></div>
         <span id="locText">Locating...</span>
@@ -52,45 +57,43 @@
     <div class="map-view">
       <div id="map"></div>
 
-      <!-- AR VIEW -->
       <div class="ar-view" id="arView">
-        <button class="ar-exit-btn ar-exit-btn-floating" onclick="closeAR()">✕ Exit</button>
+        <button class="ar-exit-btn ar-exit-btn-floating" onclick="closeAR()">&times; Exit</button>
         <div class="ar-cam-section">
           <video id="arVideo" autoplay playsinline muted></video>
           <div class="cam-fallback" id="camFallback">
-            <div style="font-size:48px;opacity:.3;margin-bottom:8px;">📷</div>
+            <div style="font-size:48px;opacity:.3;margin-bottom:8px;">&#128247;</div>
             <strong style="color:var(--text);font-size:14px;">Camera Required</strong>
             <span>Allow camera access for AR navigation.</span>
           </div>
           <canvas id="arCanvas"></canvas>
           <div class="ar-dir-overlay">
             <div class="ar-dest-chip">
-              <span class="ar-dest-chip-ico" id="arDestIcon">🎯</span>
+              <span class="ar-dest-chip-ico" id="arDestIcon">&#127919;</span>
               <div class="ar-dest-chip-txt">
                 <div class="ar-dest-chip-name" id="arDestNamePill">Destination</div>
-                <div class="ar-dest-chip-sub" id="arDestSubPill">Building · Floor</div>
+                <div class="ar-dest-chip-sub" id="arDestSubPill">Building &middot; Floor</div>
               </div>
             </div>
-            <div class="ar-eta-chip" id="arEtaChip">🚶 —</div>
+            <div class="ar-eta-chip" id="arEtaChip">&#128694; &mdash;</div>
           </div>
           <div class="ar-compass-wrap">
             <div class="ar-compass-ring" id="arCompassRing">
-              <div class="ar-dir-arrow" id="arDirArrow">↑</div>
+              <div class="ar-dir-arrow" id="arDirArrow">&uarr;</div>
             </div>
             <div class="ar-dist-badge" id="arDistBadge">Calculating...</div>
           </div>
         </div>
         <div class="ar-map-section">
-          <button class="ar-exit-btn" onclick="closeAR()">✕ Exit</button>
+          <button class="ar-exit-btn" onclick="closeAR()">&times; Exit</button>
           <div class="ar-map-handle" aria-hidden="true"></div>
           <canvas id="arMapCanvas"></canvas>
         </div>
       </div>
 
-      <!-- CAMPUS MAP -->
       <div class="campus-scroll" id="campusScroll">
         <div class="campus" id="campus">
-          <div class="campus-title">OUR LADY OF THE PILLAR COLLEGE · SAN MANUEL, INC.</div>
+          <div class="campus-title">OUR LADY OF THE PILLAR COLLEGE &middot; SAN MANUEL, INC.</div>
 
           <svg class="xsvg" id="xsvg"></svg>
           <div id="bslots"></div>
@@ -99,24 +102,22 @@
               <div class="user-loc-dot"></div>
             </div>
           </div>
-          <div class="north"><span class="north-arrow">↑</span><span class="north-lbl">N</span></div>
+          <div class="north"><span class="north-arrow">&uarr;</span><span class="north-lbl">N</span></div>
           <div class="map-ctrl">
             <button class="mc-btn" onclick="zoomIn()">+</button>
-            <button class="mc-btn" onclick="zoomOut()">−</button>
-            <button class="mc-btn" onclick="recenterUser()" title="My Location">◎</button>
+            <button class="mc-btn" onclick="zoomOut()">&minus;</button>
+            <button class="mc-btn" onclick="recenterUser()" title="My Location">&#8857;</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- MOBILE DRAWER BACKDROP -->
     <div id="drawerBackdrop" onclick="closeMobileDrawer()"></div>
 
-    <!-- SIDEBAR -->
     <div class="sidebar">
       <div class="sidebar-handle-strip" onclick="toggleMobileDrawer()" aria-label="Toggle navigation panel"></div>
       <div class="sb-top">
-        <div class="sb-hint" id="modeHint">Tap any room → set location. Tap destination → get route.</div>
+        <div class="sb-hint" id="modeHint">Tap any room &rarr; set location. Tap destination &rarr; get route.</div>
       </div>
       <div class="sb-body">
         <div id="sbDefaultPanel">
@@ -143,7 +144,7 @@
           <div class="rt-pt">
             <div class="rt-dot" style="background:#3b82f6;box-shadow:0 0 6px rgba(59,130,246,.4);"></div>
             <div>
-              <div class="rt-name" id="rFrom">—</div>
+              <div class="rt-name" id="rFrom">&mdash;</div>
               <div class="rt-sub" id="rFromSub"></div>
             </div>
           </div>
@@ -151,15 +152,15 @@
           <div class="rt-pt">
             <div class="rt-dot" style="background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.4);"></div>
             <div>
-              <div class="rt-name" id="rTo">—</div>
+              <div class="rt-name" id="rTo">&mdash;</div>
               <div class="rt-sub" id="rToSub"></div>
             </div>
           </div>
-          <div class="rt-eta"><span class="rt-eta-ico">🚶</span><span class="rt-eta-txt" id="rtEtaTxt">—</span></div>
+          <div class="rt-eta"><span class="rt-eta-ico">&#128694;</span><span class="rt-eta-txt" id="rtEtaTxt">&mdash;</span></div>
           <div class="steps" id="steps"></div>
           <button class="ar-launch-btn" onclick="launchAR()">Launch AR Navigation</button>
-          <button class="share-route-btn" onclick="shareRoute()">📤 Share Route</button>
-          <button class="clear-btn" onclick="clearRoute()">✕ Clear Route</button>
+          <button class="share-route-btn" onclick="shareRoute()">&#128228; Share Route</button>
+          <button class="clear-btn" onclick="clearRoute()">&times; Clear Route</button>
         </div>
       </div>
       <div class="sb-legend">
@@ -181,14 +182,13 @@
             <div class="leg-dot" style="background:rgba(180,130,20,.12);border-color:rgba(220,180,40,.35);"></div>
             Staircase
           </div>
-          <div class="leg-row"><span style="color:#3b82f6;font-size:11px;">●</span>&nbsp;You Are Here</div>
-          <div class="leg-row"><span style="color:#22c55e;font-size:11px;">★</span>&nbsp;Destination</div>
+          <div class="leg-row"><span style="color:#3b82f6;font-size:11px;">&#9679;</span>&nbsp;You Are Here</div>
+          <div class="leg-row"><span style="color:#22c55e;font-size:11px;">&#9733;</span>&nbsp;Destination</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MOBILE FAB -->
   <button id="mobileFAB" onclick="toggleMobileDrawer()" style="
   position:fixed; bottom:16px; right:16px; z-index:401;
   width:52px; height:52px; border-radius:50%;
@@ -197,30 +197,29 @@
   color:#fff; font-size:22px; cursor:pointer;
   align-items:center; justify-content:center;
   transition:transform .2s;
-" aria-label="Open navigation panel">🗺️</button>
+" aria-label="Open navigation panel">&#128506;</button>
 
-  <!-- POPUP -->
   <div class="popup-overlay" id="popupOverlay" onclick="closePopupBg(event)">
     <div class="popup">
       <div class="popup-handle"></div>
       <div class="popup-head">
-        <div class="popup-ico" id="pIco">🚪</div>
+        <div class="popup-ico" id="pIco">&#128682;</div>
         <div>
           <div class="popup-title" id="pTitle">Room</div>
           <div class="popup-sub" id="pSub"></div>
         </div>
-        <button class="popup-close" onclick="closePopup()">✕</button>
+        <button class="popup-close" onclick="closePopup()">&times;</button>
       </div>
       <div class="popup-body">
         <div class="popup-hours" id="pHours">
-          <div class="popup-hours-dot"></div><span id="pHoursText">Open 7:00 AM – 5:00 PM</span>
+          <div class="popup-hours-dot"></div><span id="pHoursText">Open 7:00 AM &ndash; 5:00 PM</span>
         </div>
         <p class="popup-desc" id="pDesc"></p>
         <div class="popup-tags" id="pTags"></div>
         <div class="popup-actions">
           <button class="pa-btn pa-secondary" onclick="popupSetOrigin()">I'm Here</button>
           <button class="pa-btn pa-primary" onclick="popupGoHere()">Navigate Here</button>
-          <button class="pa-btn pa-secondary" onclick="shareRoom()" style="flex: 0 0 auto; width: 44px; padding: 10px 0;">🔗</button>
+          <button class="pa-btn pa-secondary" onclick="shareRoom()" style="flex: 0 0 auto; width: 44px; padding: 10px 0;">&#128279;</button>
         </div>
       </div>
     </div>
