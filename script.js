@@ -1224,6 +1224,13 @@ function drawARCamOverlay(canvas, ctx) {
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide
       });
+      
+      // Initialize InstancedMesh for Floating Orbs securely
+      cachedAR.threeSphereGeo = new THREE.SphereGeometry(0.25, 16, 16);
+      cachedAR.threeOrbs = new THREE.InstancedMesh(cachedAR.threeSphereGeo, cachedAR.threePathMaterial, 50);
+      cachedAR.threeOrbs.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      cachedAR.threeScene.add(cachedAR.threeOrbs);
+      cachedAR.threeDummy = new THREE.Object3D();
     }
   }
 
@@ -1283,24 +1290,43 @@ function drawARCamOverlay(canvas, ctx) {
 
   var goal3D = new THREE.Vector3(0, -1, -5); 
   
-  // Render ultra-realistic 3D Spline Path
+  // Render 3D Floating Orbs along the Spline Path
   if (typeof THREE !== 'undefined' && cachedAR.threeScene && threePoints.length >= 2) {
-    if (cachedAR.threePathMesh) {
-      cachedAR.threeScene.remove(cachedAR.threePathMesh);
-      cachedAR.threePathMesh.geometry.dispose();
+    var curve = new THREE.CatmullRomCurve3(threePoints);
+    var animOffset = (Date.now() % 2000) / 2000; // 0 to 1 loop every 2 sec
+    
+    var orbCount = Math.max(4, Math.floor(curve.getLength() * 1.5)); 
+    if (orbCount > 50) orbCount = 50; 
+
+    // Animate Orbs via InstancedMesh for performance
+    if (cachedAR.threeOrbs) {
+      cachedAR.threeOrbs.count = orbCount;
+      var dummy = cachedAR.threeDummy;
+
+      for (var i = 0; i < orbCount; i++) {
+          var t = i / (orbCount - 1);
+          var pulse = Math.sin((t - animOffset) * Math.PI * 4); // Rippling wave effect
+          
+          var pt = curve.getPoint(t);
+          dummy.position.copy(pt);
+          dummy.position.y = 0.6 + pulse * 0.15; // Float at 0.6m, bounce with wave
+          
+          var scale = 0.7 + pulse * 0.3; // Grow/shrink based on wave
+          dummy.scale.set(scale, scale, scale);
+          
+          dummy.updateMatrix();
+          cachedAR.threeOrbs.setMatrixAt(i, dummy.matrix);
+      }
+      cachedAR.threeOrbs.instanceMatrix.needsUpdate = true;
     }
     
-    var curve = new THREE.CatmullRomCurve3(threePoints);
-    cachedAR.threePathMaterial.opacity = 0.5 + 0.35 * Math.sin(Date.now() / 300); // Pulsing animation
-    
-    var tubeGeo = new THREE.TubeGeometry(curve, 64, 0.45, 8, false);
-    tubeGeo.scale(1, 0.05, 1); // Flatten the tube to simulate painted ground
-    cachedAR.threePathMesh = new THREE.Mesh(tubeGeo, cachedAR.threePathMaterial);
-    
-    cachedAR.threePathMesh.position.y = 0.02; // Lift just above the math floor to prevent clipping
-    cachedAR.threeScene.add(cachedAR.threePathMesh);
-    
-    // Dispatch render task
+    // Remove the old solid tube if it existed
+    if (cachedAR.threePathMesh) {
+      cachedAR.threeScene.remove(cachedAR.threePathMesh);
+      if (cachedAR.threePathMesh.geometry) cachedAR.threePathMesh.geometry.dispose();
+      cachedAR.threePathMesh = null;
+    }
+
     cachedAR.threeRenderer.render(cachedAR.threeScene, cachedAR.threeCamera);
     goal3D = threePoints[threePoints.length - 1]; 
   }
