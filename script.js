@@ -1217,8 +1217,8 @@ function drawARCamOverlay(canvas, ctx) {
       var x = cx + getARHorizontalOffset(diff, laneWidth);
       var y = baseY - (baseY - horizY) * depth;
       
-      // Invert perspective rendering: Closest is largest, furthest is smallest.
-      var r = Math.max(4, 18 - depth * 14); // closest 18px, furthest 4px
+      // Floor perspective rendering: much larger radius since it will be squashed
+      var r = Math.max(8, 46 - depth * 38); 
       routeDots.push({ x: x, y: y, r: r, alpha: 0.25 + (1 - depth) * 0.75 });
     });
     if (routeDots.length) leadX = routeDots[0].x;
@@ -1233,7 +1233,7 @@ function drawARCamOverlay(canvas, ctx) {
     }
     for (var i = 0; i < numDots; i++) {
       var t2 = numDots > 1 ? i / (numDots - 1) : 0;
-      var r = Math.max(4, 18 - t2 * 14);
+      var r = Math.max(8, 46 - t2 * 38);
       routeDots.push({ x: cx + curveXTarget * t2, y: baseY - (baseY - horizY) * t2, r: r, alpha: 0.25 + (1 - t2) * 0.75 });
     }
     leadX = cx + curveXTarget;
@@ -1251,24 +1251,32 @@ function drawARCamOverlay(canvas, ctx) {
     var r = dot.r;
     
     ctx.save();
-    // Add glowing orbit
+    
+    // Scale context to draw ellipse glued to the floor
+    ctx.translate(dot.x, dot.y);
+    var squashRatio = 0.38 + (r / 200); // 0.38 baseline, slightly rounder when closer
+    ctx.scale(1, squashRatio);
+
     ctx.shadowColor = 'rgba(56,189,248,' + (alpha * 0.8) + ')';
-    ctx.shadowBlur = r * 1.5;
+    ctx.shadowBlur = r * 0.8;
 
-    // 3D Sphere gradient
-    var radGrad = ctx.createRadialGradient(
-      dot.x, dot.y - r * 0.2, r * 0.1, 
-      dot.x, dot.y, r
-    );
-    radGrad.addColorStop(0, 'rgba(255,255,255,' + Math.min(1, alpha + 0.3) + ')');   // Center white highlight
-    radGrad.addColorStop(0.3, 'rgba(125,211,252,' + alpha + ')');   // Cyan highlight
-    radGrad.addColorStop(0.7, 'rgba(2,132,199,' + (alpha * 0.9) + ')'); // Deep blue main body
-    radGrad.addColorStop(1, 'rgba(12,74,110,' + (alpha * 0.6) + ')');   // Darker rim edge
-
+    // Glowing floor dot
+    var radGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+    radGrad.addColorStop(0, 'rgba(56,189,248,' + alpha + ')');
+    radGrad.addColorStop(0.7, 'rgba(14,165,233,' + (alpha * 0.9) + ')');
+    radGrad.addColorStop(1, 'rgba(2,132,199,' + (alpha * 0.1) + ')');
+    
     ctx.beginPath();
-    ctx.arc(dot.x, dot.y, r, 0, Math.PI * 2);
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = radGrad;
     ctx.fill();
+    
+    // Solid center dot for that 'painted floor' tracking look
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(56,189,248,' + Math.min(1, alpha + 0.3) + ')';
+    ctx.fill();
+
     ctx.restore();
   });
 
