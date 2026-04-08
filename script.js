@@ -1309,7 +1309,7 @@ function drawARCamOverlay(canvas, ctx) {
           
           var pt = curve.getPoint(t);
           dummy.position.copy(pt);
-          dummy.position.y = 0.3 + pulse * 0.15; // Float at 0.3m, bounce with wave
+          dummy.position.y = 0.0 + pulse * 0.15; // Float at 0.3m, bounce with wave
           
           var scale = 0.7 + pulse * 0.3; // Grow/shrink based on wave
           dummy.scale.set(scale, scale, scale);
