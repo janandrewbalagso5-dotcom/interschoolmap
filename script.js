@@ -1212,43 +1212,67 @@ function drawARCamOverlay(canvas, ctx) {
       var t = usableDots.length === 1 ? 1 : idx / (usableDots.length - 1);
       var bearing = calculateBearing(userGPS.lat, userGPS.lng, p.lat, p.lng);
       var diff = normalizeHeadingDelta(bearing - arDeviceHeading);
-      var depth = 1 - Math.pow(1 - t, 1.35);
+      var depth = 1 - Math.pow(1 - t, 1.35); // 0 corresponds to closest
       var laneWidth = (1 - depth) * (W * .20) + W * .015;
       var x = cx + getARHorizontalOffset(diff, laneWidth);
       var y = baseY - (baseY - horizY) * depth;
-      var r = 2.5 + depth * 8;
-      routeDots.push({ x: x, y: y, r: r, depth: depth, alpha: .16 + depth * .42 });
+      
+      // Invert perspective rendering: Closest is largest, furthest is smallest.
+      var r = Math.max(4, 18 - depth * 14); // closest 18px, furthest 4px
+      routeDots.push({ x: x, y: y, r: r, alpha: 0.25 + (1 - depth) * 0.75 });
     });
     if (routeDots.length) leadX = routeDots[0].x;
   } else {
     var numDots = Math.max(4, Math.round(11 * remainingRatio));
-    var curveX = 0;
+    var curveXTarget = 0;
     if (userGPS.lat && destId) {
       var toR = getRoom(destId), destGPSPos = roomToGPS(toR);
       var targetBearing = calculateBearing(userGPS.lat, userGPS.lng, destGPSPos.lat, destGPSPos.lng);
       var diff = normalizeHeadingDelta(targetBearing - arDeviceHeading);
-      curveX = arHasHeading ? getARHorizontalOffset(diff, W * .26) : 0;
+      curveXTarget = arHasHeading ? getARHorizontalOffset(diff, W * .26) : 0;
     }
     for (var i = 0; i < numDots; i++) {
-      var t2 = i / (numDots - 1), persp = .28 + t2 * .72;
-      routeDots.push({ x: cx + curveX * t2, y: baseY - (baseY - horizY) * t2, r: (2.5 + 8 * t2) * persp, depth: t2, alpha: .16 + t2 * .42 });
+      var t2 = numDots > 1 ? i / (numDots - 1) : 0;
+      var r = Math.max(4, 18 - t2 * 14);
+      routeDots.push({ x: cx + curveXTarget * t2, y: baseY - (baseY - horizY) * t2, r: r, alpha: 0.25 + (1 - t2) * 0.75 });
     }
-    leadX = cx + curveX;
+    leadX = cx + curveXTarget;
   }
-  routeDots.forEach(function (dot) {
-    var alpha = dot.alpha;
-    ctx.beginPath();
-    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(56,189,248,' + alpha.toFixed(2) + ')';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(dot.x, dot.y, Math.max(1.2, dot.r * .28), 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,' + Math.min(.55, alpha + .08).toFixed(2) + ')';
-    ctx.fill();
-  });
+
+  // Pre-calculate goal dot before sorting
+  var goalDot = routeDots.length ? routeDots[routeDots.length - 1] : { x: leadX, y: horizY + 15 };
   var curveX = leadX - cx;
+
+  // Painter's algorithm: sort ascending by radius (smallest/furthest drawn first!)
+  routeDots.sort(function(a, b) { return a.r - b.r; });
+
+  routeDots.forEach(function (dot) {
+    var alpha = Math.min(1, Math.max(0, dot.alpha));
+    var r = dot.r;
+    
+    ctx.save();
+    // Add glowing orbit
+    ctx.shadowColor = 'rgba(56,189,248,' + (alpha * 0.8) + ')';
+    ctx.shadowBlur = r * 1.5;
+
+    // 3D Sphere gradient
+    var radGrad = ctx.createRadialGradient(
+      dot.x, dot.y - r * 0.2, r * 0.1, 
+      dot.x, dot.y, r
+    );
+    radGrad.addColorStop(0, 'rgba(255,255,255,' + Math.min(1, alpha + 0.3) + ')');   // Center white highlight
+    radGrad.addColorStop(0.3, 'rgba(125,211,252,' + alpha + ')');   // Cyan highlight
+    radGrad.addColorStop(0.7, 'rgba(2,132,199,' + (alpha * 0.9) + ')'); // Deep blue main body
+    radGrad.addColorStop(1, 'rgba(12,74,110,' + (alpha * 0.6) + ')');   // Darker rim edge
+
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = radGrad;
+    ctx.fill();
+    ctx.restore();
+  });
+
   if (arStepIdx >= arSteps.length - 1) {
-    var goalDot = routeDots.length ? routeDots[routeDots.length - 1] : { x: leadX, y: horizY + 15 };
     ctx.save(); ctx.shadowBlur = 24; ctx.shadowColor = '#22c55e';
     ctx.fillStyle = 'rgba(34,197,94,.9)'; ctx.beginPath(); ctx.arc(goalDot.x, goalDot.y, 20, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1570,20 +1594,9 @@ function updateARFromGPS() {
       return;
     }
   }
-  if (lastStepGPS && userGPS.accuracy < 30) {
-    var moved = gpsDistance(userGPS.lat, userGPS.lng, lastStepGPS.lat, lastStepGPS.lng);
-    if (moved > STEP_ADV && arStepIdx < arSteps.length - 1) {
-      arStepIdx++;
-      updateARStepUI();
-      lastStepGPS = { lat: userGPS.lat, lng: userGPS.lng };
-      toast('✅ Step ' + arStepIdx + ' complete');
-      if (voiceAnnouncementState.lastStep !== arStepIdx) {
-        voiceAnnouncementState.lastStep = arStepIdx;
-        var nextStep = arSteps[arStepIdx];
-        if (nextStep) speakGuidance('Next: ' + toSpokenText(nextStep.text), 'step:' + destId + ':' + arStepIdx, 0);
-      }
-    }
-  }
+  // Faulty distance-based step advancement completely removed here.
+  // We rely fully on the distance-to-destination logic above to indicate 'arrival'.
+  // Steps act as a helpful reference roadmap rather than forced checkpoints prone to GPS noise.
 }
 function closeAR() {
   document.getElementById('arView').classList.remove('show');
