@@ -1097,13 +1097,12 @@ html {
     position: absolute;
     top: 0;
     left: 0;
-    opacity: 0;
+    display: none;
     pointer-events: none;
-    transition: opacity .25s;
 }
 
 .flr-layer.show {
-    opacity: 1;
+    display: block;
     pointer-events: all;
 }
 
@@ -1124,7 +1123,6 @@ html {
     stroke-width: 2.5 !important;
     filter: drop-shadow(0 0 6px rgba(37, 99, 235, .5));
 }
-
 .room-g.dest rect {
     stroke: #16a34a !important;
     stroke-width: 2.5 !important;

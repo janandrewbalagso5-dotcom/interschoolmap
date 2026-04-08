@@ -1,4 +1,4 @@
-﻿// GPS POLYGON ANCHORS â€” exact roof corners from Google Maps
+// GPS POLYGON ANCHORS â€” exact roof corners from Google Maps
 var GPS = {
   nb: [
     [17.026607, 121.628844], // A â€” top-left
@@ -309,7 +309,7 @@ function initLeaflet() {
     buildingOverlays[bk] = wrap;
   });
 
-  map.on('zoomend viewreset resize zoom move', queueOverlaySync);
+  map.on('zoomend viewreset resize zoom', queueOverlaySync);
   syncAllOverlays();
 }
 
@@ -976,7 +976,6 @@ function highlight() {
 // ============================================================
 function clearPathSVG() {
   document.querySelectorAll('[id^="pg-"]').forEach(function (g) { g.innerHTML = ''; });
-  var xs = document.getElementById('xsvg'); if (xs) xs.innerHTML = '';
 }
 function ctr(r) { return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; }
 
@@ -1172,7 +1171,7 @@ function startARLoop() {
       drawARCamOverlay(camCanvas, cachedAR.camCtx);
       arLastCamFrameAt = ts;
     }
-    if (mapCanvas && (arMapNeedsRedraw || !arLastMapFrameAt || ts - arLastMapFrameAt >= 250)) {
+    if (mapCanvas && (arMapNeedsRedraw || !arLastMapFrameAt)) {
       drawARMapView(mapCanvas, cachedAR.mapCtx);
       arLastMapFrameAt = ts;
       arMapNeedsRedraw = false;
