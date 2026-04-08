@@ -1226,7 +1226,7 @@ function drawARCamOverlay(canvas, ctx) {
       });
       
       // Initialize InstancedMesh for Floating Orbs securely
-      cachedAR.threeSphereGeo = new THREE.SphereGeometry(0.25, 16, 16);
+      cachedAR.threeSphereGeo = new THREE.SphereGeometry(0.45, 16, 16);
       cachedAR.threeOrbs = new THREE.InstancedMesh(cachedAR.threeSphereGeo, cachedAR.threePathMaterial, 50);
       cachedAR.threeOrbs.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       cachedAR.threeScene.add(cachedAR.threeOrbs);
