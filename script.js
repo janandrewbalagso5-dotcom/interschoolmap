@@ -1197,6 +1197,43 @@ function drawARCamOverlay(canvas, ctx) {
   ctx = ctx || canvas.getContext('2d');
   var W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
+  
+  // Initialize Three.js WebGL overlay if it doesn't exist
+  if (typeof THREE !== 'undefined' && !cachedAR.threeRenderer) {
+    var sec = cachedAR.camSection;
+    if (sec) {
+      cachedAR.threeScene = new THREE.Scene();
+      cachedAR.threeCamera = new THREE.PerspectiveCamera(70, sec.clientWidth / sec.clientHeight, 0.1, 100);
+      cachedAR.threeCamera.position.set(0, 1.4, 0); // Camera at 1.4m height (eye-level)
+      
+      cachedAR.threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      cachedAR.threeRenderer.setSize(sec.clientWidth, sec.clientHeight);
+      cachedAR.threeRenderer.setPixelRatio(window.devicePixelRatio);
+      var glCanvas = cachedAR.threeRenderer.domElement;
+      glCanvas.style.position = 'absolute';
+      glCanvas.style.top = '0';
+      glCanvas.style.left = '0';
+      glCanvas.style.pointerEvents = 'none';
+      glCanvas.style.zIndex = '5'; // Above video, under 2D canvas
+      sec.insertBefore(glCanvas, canvas);
+      
+      cachedAR.threePathMaterial = new THREE.MeshBasicMaterial({
+        color: 0x0ea5e9, // Glowing neon cyan
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide
+      });
+    }
+  }
+
+  // Handle window resizing cleanly for Three.js
+  if (cachedAR.threeRenderer && (cachedAR.threeRenderer.domElement.clientWidth !== W || cachedAR.threeRenderer.domElement.clientHeight !== H)) {
+    cachedAR.threeRenderer.setSize(W, H);
+    cachedAR.threeCamera.aspect = W / H;
+    cachedAR.threeCamera.updateProjectionMatrix();
+  }
+
   var remainingDist = 0;
   if (userGPS.lat && destId) {
     var curTo = getRoom(destId), curDestGPS = roomToGPS(curTo);
@@ -1204,92 +1241,95 @@ function drawARCamOverlay(canvas, ctx) {
   } else if (arStableDist !== null) remainingDist = arStableDist;
   var refDist = Math.max(arLaunchDist || remainingDist || 1, 1);
   var remainingRatio = Math.max(.18, Math.min(1, remainingDist / refDist || 1));
-  var baseY = H * .87, horizY = H * (.20 + .12 * (1 - remainingRatio)), cx = W / 2;
-  var routeDots = [], leadX = cx;
+  var cx = W / 2, horizY = H * (.20 + .12 * (1 - remainingRatio));
+
+  var threePoints = [];
+  threePoints.push(new THREE.Vector3(0, 0, 0)); // Anchor path at user's feet
+
+  var curveDir = 0, leadX = cx;
+
+  // Process GPS Dots into 3D Physical Space
   if (userGPS.lat && arPathDots.length) {
-    var usableDots = arPathDots.slice(1, Math.min(arPathDots.length, 11));
-    usableDots.forEach(function (p, idx) {
-      var t = usableDots.length === 1 ? 1 : idx / (usableDots.length - 1);
+    var usableDots = arPathDots.slice(1, Math.min(arPathDots.length, 12));
+    if (usableDots.length > 0) {
+      var bear1 = calculateBearing(userGPS.lat, userGPS.lng, usableDots[0].lat, usableDots[0].lng);
+      curveDir = normalizeHeadingDelta(bear1 - arDeviceHeading);
+    }
+    usableDots.forEach(function (p) {
       var bearing = calculateBearing(userGPS.lat, userGPS.lng, p.lat, p.lng);
       var diff = normalizeHeadingDelta(bearing - arDeviceHeading);
-      var depth = 1 - Math.pow(1 - t, 1.35); // 0 corresponds to closest
-      var laneWidth = (1 - depth) * (W * .20) + W * .015;
-      var x = cx + getARHorizontalOffset(diff, laneWidth);
-      var y = baseY - (baseY - horizY) * depth;
-      
-      // Floor perspective rendering: much larger radius since it will be squashed
-      var r = Math.max(8, 46 - depth * 38); 
-      routeDots.push({ x: x, y: y, r: r, alpha: 0.25 + (1 - depth) * 0.75 });
+      var dist = Math.max(0.1, gpsDistance(userGPS.lat, userGPS.lng, p.lat, p.lng));
+      if (dist > 50) dist = 50; 
+      var angleRad = diff * Math.PI / 180;
+      var x = dist * Math.sin(angleRad);
+      var z = -(dist * Math.cos(angleRad)); // In front of camera is -Z
+      if (z < 0.5) threePoints.push(new THREE.Vector3(x, 0, z));
     });
-    if (routeDots.length) leadX = routeDots[0].x;
   } else {
+    // Generate simulated straight-line navigation if no live GPS fixes map matches
     var numDots = Math.max(4, Math.round(11 * remainingRatio));
-    var curveXTarget = 0;
     if (userGPS.lat && destId) {
       var toR = getRoom(destId), destGPSPos = roomToGPS(toR);
       var targetBearing = calculateBearing(userGPS.lat, userGPS.lng, destGPSPos.lat, destGPSPos.lng);
-      var diff = normalizeHeadingDelta(targetBearing - arDeviceHeading);
-      curveXTarget = arHasHeading ? getARHorizontalOffset(diff, W * .26) : 0;
+      curveDir = normalizeHeadingDelta(targetBearing - arDeviceHeading);
     }
-    for (var i = 0; i < numDots; i++) {
-      var t2 = numDots > 1 ? i / (numDots - 1) : 0;
-      var r = Math.max(8, 46 - t2 * 38);
-      routeDots.push({ x: cx + curveXTarget * t2, y: baseY - (baseY - horizY) * t2, r: r, alpha: 0.25 + (1 - t2) * 0.75 });
+    for (var i = 1; i <= numDots; i++) {
+      var t = i / numDots;
+      var fDist = i * 4.5; // Scale fake distance dynamically
+      var angleRad = (curveDir * t) * Math.PI / 180;
+      threePoints.push(new THREE.Vector3(fDist * Math.sin(angleRad), 0, -(fDist * Math.cos(angleRad))));
     }
-    leadX = cx + curveXTarget;
   }
 
-  // Pre-calculate goal dot before sorting
-  var goalDot = routeDots.length ? routeDots[routeDots.length - 1] : { x: leadX, y: horizY + 15 };
-  var curveX = leadX - cx;
-
-  // Painter's algorithm: sort ascending by radius (smallest/furthest drawn first!)
-  routeDots.sort(function(a, b) { return a.r - b.r; });
-
-  routeDots.forEach(function (dot) {
-    var alpha = Math.min(1, Math.max(0, dot.alpha));
-    var r = dot.r;
+  var goal3D = new THREE.Vector3(0, -1, -5); 
+  
+  // Render ultra-realistic 3D Spline Path
+  if (typeof THREE !== 'undefined' && cachedAR.threeScene && threePoints.length >= 2) {
+    if (cachedAR.threePathMesh) {
+      cachedAR.threeScene.remove(cachedAR.threePathMesh);
+      cachedAR.threePathMesh.geometry.dispose();
+    }
     
-    ctx.save();
+    var curve = new THREE.CatmullRomCurve3(threePoints);
+    cachedAR.threePathMaterial.opacity = 0.5 + 0.35 * Math.sin(Date.now() / 300); // Pulsing animation
     
-    // Scale context to draw ellipse glued to the floor
-    ctx.translate(dot.x, dot.y);
-    var squashRatio = 0.38 + (r / 200); // 0.38 baseline, slightly rounder when closer
-    ctx.scale(1, squashRatio);
-
-    ctx.shadowColor = 'rgba(56,189,248,' + (alpha * 0.8) + ')';
-    ctx.shadowBlur = r * 0.8;
-
-    // Glowing floor dot
-    var radGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-    radGrad.addColorStop(0, 'rgba(56,189,248,' + alpha + ')');
-    radGrad.addColorStop(0.7, 'rgba(14,165,233,' + (alpha * 0.9) + ')');
-    radGrad.addColorStop(1, 'rgba(2,132,199,' + (alpha * 0.1) + ')');
+    var tubeGeo = new THREE.TubeGeometry(curve, 64, 0.45, 8, false);
+    tubeGeo.scale(1, 0.05, 1); // Flatten the tube to simulate painted ground
+    cachedAR.threePathMesh = new THREE.Mesh(tubeGeo, cachedAR.threePathMaterial);
     
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fillStyle = radGrad;
-    ctx.fill();
+    cachedAR.threePathMesh.position.y = 0.02; // Lift just above the math floor to prevent clipping
+    cachedAR.threeScene.add(cachedAR.threePathMesh);
     
-    // Solid center dot for that 'painted floor' tracking look
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(56,189,248,' + Math.min(1, alpha + 0.3) + ')';
-    ctx.fill();
+    // Dispatch render task
+    cachedAR.threeRenderer.render(cachedAR.threeScene, cachedAR.threeCamera);
+    goal3D = threePoints[threePoints.length - 1]; 
+  }
 
-    ctx.restore();
-  });
+  // 2D Canvas Overlays (Goal Star and Turn Arrows mapped to 3D EndPoint)
+  var projectedGoal = null;
+  if (typeof THREE !== 'undefined' && cachedAR.threeCamera) {
+    projectedGoal = goal3D.clone();
+    projectedGoal.project(cachedAR.threeCamera); // Map 3D Space to NDC (-1 to 1)
+  }
 
+  var screenGoalX = projectedGoal ? (projectedGoal.x * 0.5 + 0.5) * W : leadX;
+  var screenGoalY = projectedGoal ? -(projectedGoal.y * 0.5 - 0.5) * H : horizY + 15;
+  if (projectedGoal && projectedGoal.z > 1) screenGoalY = H * 1.5; // Do not draw if behind the camera!
+
+  // Final Destination Marker
   if (arStepIdx >= arSteps.length - 1) {
     ctx.save(); ctx.shadowBlur = 24; ctx.shadowColor = '#22c55e';
-    ctx.fillStyle = 'rgba(34,197,94,.9)'; ctx.beginPath(); ctx.arc(goalDot.x, goalDot.y, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(34,197,94,.9)'; ctx.beginPath(); ctx.arc(screenGoalX, screenGoalY, 20, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('★', cx + curveX * .8, horizY + 15); ctx.restore();
+    ctx.fillText('★', screenGoalX, screenGoalY); ctx.restore();
   }
-  if (Math.abs(curveX) > 10) {
-    ctx.save(); ctx.globalAlpha = .4 + .3 * Math.sin(Date.now() / 450);
-    ctx.font = 'bold 34px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(curveX > 0 ? '→' : '←', cx + (curveX > 0 ? 80 : -80), H * .55); ctx.restore();
+  
+  // High-Curvature directional UI cue (floating arrow when sharp turn)
+  if (Math.abs(curveDir) > 20) {
+    ctx.save(); ctx.globalAlpha = .5 + .4 * Math.sin(Date.now() / 450);
+    ctx.shadowBlur = 12; ctx.shadowColor = '#000';
+    ctx.font = 'bold 36px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(curveDir > 0 ? '→' : '←', cx + (curveDir > 0 ? 90 : -90), H * .55); ctx.restore();
   }
 }
 
