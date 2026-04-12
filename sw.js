@@ -1,4 +1,4 @@
-const CACHE_NAME = 'olpc-map-v2';
+const CACHE_NAME = 'olpc-map-v3';
 
 const ASSETS = [
     './',

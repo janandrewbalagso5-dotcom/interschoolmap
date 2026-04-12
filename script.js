@@ -1,4 +1,4 @@
-// GPS POLYGON ANCHORS â€” exact roof corners from Google Maps
+﻿// GPS POLYGON ANCHORS â€” exact roof corners from Google Maps
 var GPS = {
   nb: [
     [17.026607, 121.628844], // A â€” top-left
@@ -578,6 +578,7 @@ function onGPSUpdate(p) {
   if (document.getElementById('arView').classList.contains('show')) {
     buildARPathDots();
     updateARFromGPS();
+    arMapNeedsRedraw = true;
   }
 
   if (destId && onCampus) {
@@ -1171,7 +1172,8 @@ function startARLoop() {
       drawARCamOverlay(camCanvas, cachedAR.camCtx);
       arLastCamFrameAt = ts;
     }
-    if (mapCanvas && (arMapNeedsRedraw || !arLastMapFrameAt)) {
+    if (mapCanvas && (arMapNeedsRedraw || !arLastMapFrameAt || ts - (arLastMapFrameAt || 0) >= 16)) {
+      arMapDotProgress = (arMapDotProgress + 0.004) % 1;
       drawARMapView(mapCanvas, cachedAR.mapCtx);
       arLastMapFrameAt = ts;
       arMapNeedsRedraw = false;
@@ -1449,6 +1451,44 @@ function arCanvasRoomStyle(type) {
   return { fill: 'rgba(246,249,251,.96)', stroke: 'rgba(159,184,197,.5)', text: '#5d7686' };
 }
 
+// Convert GPS → SVG building coords using inverse bilinear interpolation
+function gpsToSVG(lat, lng, bk) {
+  var bd = DATA[bk], gps = GPS[bk];
+  var A = gps[0], B = gps[1], C = gps[2], D = gps[3];
+  var u = 0.5, v = 0.5;
+  for (var iter = 0; iter < 10; iter++) {
+    var fLat = A[0]*(1-u)*(1-v) + B[0]*u*(1-v) + C[0]*u*v + D[0]*(1-u)*v - lat;
+    var fLng = A[1]*(1-u)*(1-v) + B[1]*u*(1-v) + C[1]*u*v + D[1]*(1-u)*v - lng;
+    var dLatDu = -A[0]*(1-v) + B[0]*(1-v) + C[0]*v - D[0]*v;
+    var dLatDv = -A[0]*(1-u) - B[0]*u + C[0]*u + D[0]*(1-u);
+    var dLngDu = -A[1]*(1-v) + B[1]*(1-v) + C[1]*v - D[1]*v;
+    var dLngDv = -A[1]*(1-u) - B[1]*u + C[1]*u + D[1]*(1-u);
+    var det = dLatDu*dLngDv - dLatDv*dLngDu;
+    if (Math.abs(det) < 1e-15) break;
+    u -= (fLat*dLngDv - fLng*dLatDv) / det;
+    v -= (dLatDu*fLng - dLngDu*fLat) / det;
+    u = Math.max(0, Math.min(1, u));
+    v = Math.max(0, Math.min(1, v));
+  }
+  return { x: u * bd.svgW, y: v * bd.svgH };
+}
+
+// Project a point onto the closest position along a polyline path
+function projectOnPath(pt, path) {
+  var bestPt = path[0], bestDist = Infinity;
+  for (var i = 0; i < path.length - 1; i++) {
+    var A = path[i], B = path[i+1];
+    var dx = B.x - A.x, dy = B.y - A.y;
+    var len2 = dx*dx + dy*dy;
+    if (len2 === 0) continue;
+    var t = Math.max(0, Math.min(1, ((pt.x-A.x)*dx + (pt.y-A.y)*dy) / len2));
+    var px = A.x + t*dx, py = A.y + t*dy;
+    var d = Math.hypot(px-pt.x, py-pt.y);
+    if (d < bestDist) { bestDist = d; bestPt = { x: px, y: py }; }
+  }
+  return bestPt;
+}
+
 function drawARRoundedRect(ctx, x, y, w, h, r) {
   var radius = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -1517,6 +1557,54 @@ function drawARPanel(ctx, panel, box) {
     ctx.strokeStyle = '#6f98ff';
     ctx.lineWidth = Math.max(2, box.scale * 3);
     ctx.stroke();
+  }
+
+  // User location dot — follows real GPS, projected onto the path
+  if (panel.path.length > 1) {
+    var walkerPt;
+    if (userGPS.lat && userGPS.lng) {
+      // Convert user GPS to this building's SVG coordinate space
+      var userSVG = gpsToSVG(userGPS.lat, userGPS.lng, panel.bk);
+      // Snap to nearest point on the path
+      walkerPt = toPx(projectOnPath(userSVG, panel.path));
+    } else {
+      // Fallback: animate along path when GPS unavailable
+      var segs = [0];
+      for (var si = 1; si < panel.path.length; si++) {
+        var ddx = panel.path[si].x - panel.path[si-1].x;
+        var ddy = panel.path[si].y - panel.path[si-1].y;
+        segs.push(segs[si-1] + Math.sqrt(ddx*ddx + ddy*ddy));
+      }
+      var totalDist = segs[segs.length - 1];
+      var targetDist = arMapDotProgress * totalDist;
+      var pi = 0;
+      for (var si = 1; si < segs.length - 1; si++) {
+        if (segs[si] <= targetDist) pi = si; else break;
+      }
+      var segLen = segs[pi+1] - segs[pi];
+      var pf = segLen > 0 ? (targetDist - segs[pi]) / segLen : 0;
+      var pa = panel.path[pi], pb = panel.path[Math.min(pi + 1, panel.path.length - 1)];
+      walkerPt = toPx({ x: pa.x + (pb.x - pa.x) * pf, y: pa.y + (pb.y - pa.y) * pf });
+    }
+    var wr = Math.max(4, box.scale * 8);
+    // Outer glow
+    ctx.beginPath();
+    ctx.arc(walkerPt.x, walkerPt.y, wr * 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.fill();
+    // White dot
+    ctx.beginPath();
+    ctx.arc(walkerPt.x, walkerPt.y, wr, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = Math.max(1.5, box.scale * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Blue inner core
+    ctx.beginPath();
+    ctx.arc(walkerPt.x, walkerPt.y, wr * 0.4, 0, Math.PI * 2);
+    ctx.fillStyle = '#3b82f6';
+    ctx.fill();
   }
 
   if (panel.fromRoom && panel.showOrigin) {
@@ -1884,6 +1972,3 @@ function shareRoute() {
     fallbackCopyTextToClipboard(url);
   }
 }
-
-
-
